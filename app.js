@@ -160,6 +160,14 @@ function initSidebar() {
   document.getElementById('sidebarVersion')&&(document.getElementById('sidebarVersion').textContent=`v${APP_VERSION.number}`);
 }
 function openSidebar()  { document.getElementById('sidebarOverlay')?.classList.add('open'); document.getElementById('sidebar')?.classList.add('open'); }
+// ensure sidebar starts closed on every page load
+function _ensureSidebarClosed(){
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebarOverlay')?.classList.remove('open');
+  // clear any inline style that could override CSS
+  const sb=document.getElementById('sidebar');
+  if(sb){sb.style.right='';sb.style.left='';}
+}
 function closeSidebar() { document.getElementById('sidebarOverlay')?.classList.remove('open'); document.getElementById('sidebar')?.classList.remove('open'); }
 
 // Clock
@@ -661,11 +669,15 @@ function applyPageTranslation(lang) {
   document.querySelectorAll('[data-i18n-title]').forEach(el=> { const v=dict[el.dataset.i18nTitle]; if(v!==undefined)el.title=v; });
   document.querySelectorAll('[data-nav]').forEach(el       => { const v=dict[el.dataset.nav];     if(v!==undefined)el.textContent=v; });
 
-  // اتجاه الـ Sidebar حسب اللغة
+  // اتجاه الـ Sidebar حسب اللغة — فقط نغيّر الـ CSS class وليس style مباشرة
+  // (style مباشرة تُفتح الـ sidebar — الـ CSS يتولى الموضع الصحيح)
   const sb = document.getElementById('sidebar');
   if (sb) {
-    if (lang === 'ar') { sb.style.right='0'; sb.style.left='auto'; }
-    else               { sb.style.left='0';  sb.style.right='auto'; }
+    // لا نلمس style.right/left — الـ CSS يتكفل بذلك عبر [lang] selector
+    // فقط نتأكد أن الـ sidebar مغلق
+    if (sb.classList.contains('open')) {
+      // لا نُغلقه هنا — إذا كان المستخدم فتحه يدوياً نبقيه مفتوحاً
+    }
   }
   window._i18n = dict;
 }
