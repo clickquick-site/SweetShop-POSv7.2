@@ -52,10 +52,14 @@
 <body>
 <div class="bg-animated"></div>
 <div class="page-wrapper">
-  <header class="app-header">
+    <header class="app-header">
     <button class="menu-btn" id="menuBtn" title="القائمة الرئيسية"><i class="fa-solid fa-bars"></i></button>
+    <button id="_notifBell" class="notif-bell" title="الإشعارات" onclick="_toggleNotifPanel&&_toggleNotifPanel()">
+      <i class="fa-solid fa-bell"></i>
+      <span id="_notifBadge" class="notif-badge" style="display:none;"></span>
+    </button>
     <span class="store-name" id="headerStoreName">اسم المتجر</span>
-    <!-- Bell injected by app.js via _injectBell() -->
+    
     <div class="app-brand">
       <span class="brand-title">POS DZ</span>
       <span class="brand-clock" id="clockDisplay"></span>
@@ -759,15 +763,18 @@
       </div>
     </div>
     <nav class="sidebar-nav">
-      <a class="nav-item" href="sale.html"><i class="fa-solid fa-cash-register nav-icon"></i><span>واجهة البيع</span></a>
-      <a class="nav-item" href="inventory.html" data-role="admin,manager"><i class="fa-solid fa-boxes-stacked nav-icon"></i><span>المخزون</span></a>
-      <a class="nav-item" href="customers.html"><i class="fa-solid fa-users nav-icon"></i><span>الزبائن</span></a>
-      <a class="nav-item" href="reports.html" data-role="admin,manager"><i class="fa-solid fa-chart-line nav-icon"></i><span>إدارة الأعمال</span></a>
-      <a class="nav-item" href="suppliers.html" data-role="admin,manager"><i class="fa-solid fa-truck nav-icon"></i><span>الموردون</span></a>
-      <a class="nav-item" href="users.html" data-role="admin"><i class="fa-solid fa-user-shield nav-icon"></i><span>المستخدمون</span></a>
-      <a class="nav-item" href="settings.html" class="nav-item active" data-role="admin,manager"><i class="fa-solid fa-gear nav-icon"></i><span>الإعدادات</span></a>
+      <span class="nav-group-label">المبيعات</span>
+      <a class="nav-item" href="sale.html"><i class="fa-solid fa-cash-register nav-icon"></i><span class="nav-label">واجهة البيع</span></a>
+      <span class="nav-group-label">الإدارة</span>
+      <a class="nav-item" href="inventory.html" data-role="admin,manager"><i class="fa-solid fa-boxes-stacked nav-icon"></i><span class="nav-label">المخزون</span></a>
+      <a class="nav-item" href="customers.html"><i class="fa-solid fa-users nav-icon"></i><span class="nav-label">الزبائن</span></a>
+      <a class="nav-item" href="reports.html" data-role="admin,manager"><i class="fa-solid fa-chart-line nav-icon"></i><span class="nav-label">إدارة الأعمال</span></a>
+      <a class="nav-item" href="suppliers.html" data-role="admin,manager"><i class="fa-solid fa-truck nav-icon"></i><span class="nav-label">الموردون</span></a>
+      <span class="nav-group-label">النظام</span>
+      <a class="nav-item" href="users.html" data-role="admin"><i class="fa-solid fa-user-shield nav-icon"></i><span class="nav-label">المستخدمون</span></a>
+      <a class="nav-item active" href="settings.html" data-role="admin,manager"><i class="fa-solid fa-gear nav-icon"></i><span class="nav-label">الإعدادات</span></a>
       <div class="nav-divider"></div>
-      <div class="nav-item danger" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket nav-icon"></i><span>خروج</span></div>
+      <div class="nav-item danger" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket nav-icon"></i><span class="nav-label">خروج</span></div>
     </nav>
     <div class="sidebar-footer"><span id="sidebarVersion">v6.0.0</span><span>POS DZ 2026</span></div>
   </div>
