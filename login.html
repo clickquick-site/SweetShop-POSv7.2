@@ -118,6 +118,8 @@
 
     .card-footer { padding: 14px 36px 20px; border-top: 1px solid var(--border); text-align: center; }
     .card-footer p { font-size: 0.78rem; color: var(--text-secondary); }
+
+    .sidebar,.sidebar-overlay{display:none!important;}
   </style>
 </head>
 <body>
@@ -243,42 +245,7 @@
   </div>
 </div>
 
-<!-- Sidebar — labels only, no icons -->
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-<div class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <div class="sidebar-brand">POS DZ</div>
-    <div class="sidebar-user" id="sidebarUser"></div>
-  </div>
-  <nav class="sidebar-nav">
-    <a class="nav-item" href="sale.html">
-      <span class="nav-label" data-nav="navSale">واجهة البيع</span>
-    </a>
-    <a class="nav-item" href="inventory.html" data-role="admin,manager">
-      <span class="nav-label" data-nav="navInventory">إدارة المخزون</span>
-    </a>
-    <a class="nav-item" href="customers.html" data-role="admin,manager,seller">
-      <span class="nav-label" data-nav="navCustomers">إدارة الزبائن</span>
-    </a>
-    <a class="nav-item" href="reports.html" data-role="admin,manager">
-      <span class="nav-label" data-nav="navReports">إدارة الأعمال</span>
-    </a>
-    <a class="nav-item" href="users.html" data-role="admin">
-      <span class="nav-label" data-nav="navUsers">إدارة المستخدمين</span>
-    </a>
-    <a class="nav-item" href="suppliers.html" data-role="admin,manager">
-      <span class="nav-label" data-nav="navSuppliers">إدارة الموزعين</span>
-    </a>
-    <a class="nav-item" href="settings.html" data-role="admin,manager">
-      <span class="nav-label" data-nav="navSettings">الإعدادات العامة</span>
-    </a>
-    <div class="nav-item danger" onclick="doLogout()">
-      <span class="nav-label" data-nav="navLogout">إغلاق التطبيق</span>
-    </div>
-  </nav>
-  <div class="sidebar-footer">POS DZ v6.0.0 | 2026 بوس ديزاد ®</div>
 </div>
-<div id="toast-container"></div>
 
 <script src="app.js"></script>
 <script>
