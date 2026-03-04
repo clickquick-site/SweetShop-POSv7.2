@@ -25,14 +25,14 @@
   </header>
   <div class="main-content">
     <div class="section-header">
-      <a href="sale.html" class="back-btn">← رجوع</a>
-      <h2 class="page-title">👤 إدارة المستخدمين</h2>
-      <button class="btn btn-primary" onclick="openModal('addUserModal')">➕ إضافة مستخدم</button>
+      <a href="sale.html" class="back-btn">← <span data-i18n="btnBack">رجوع</span></a>
+      <h2 class="page-title"><span data-i18n="titleUsers">إدارة المستخدمين</span></h2>
+      <button class="btn btn-primary" onclick="openModal('addUserModal')"><span data-i18n="userBtnAdd">إضافة مستخدم</span></button>
     </div>
 
     <div class="card" style="padding:0;overflow:hidden;">
       <table class="data-table">
-        <thead><tr><th>المستخدم</th><th>الصلاحية</th><th>تاريخ الإنشاء</th><th>إجراءات</th></tr></thead>
+        <thead><tr><th data-i18n="userColName">المستخدم</th><th data-i18n="userColRole">الصلاحية</th><th data-i18n="userColDate">تاريخ الإنشاء</th><th data-i18n="invColActions">إجراءات</th></tr></thead>
         <tbody id="usersTbody"></tbody>
       </table>
     </div>
@@ -43,16 +43,16 @@
 <div class="modal-overlay" id="addUserModal">
   <div class="modal modal-sm">
     <div class="modal-header">
-      <span class="modal-title" id="userModalTitle">➕ إضافة مستخدم</span>
+      <span class="modal-title" id="userModalTitle"><span data-i18n="userBtnAdd">إضافة مستخدم</span>
       <button class="modal-close" onclick="closeModal('addUserModal')">✕</button>
     </div>
     <input type="hidden" id="editUserId"/>
     <div class="input-group">
-      <label class="input-label">👤 اسم المستخدم *</label>
+      <label class="input-label"><span data-i18n="userLabelName">اسم المستخدم</span></label>
       <input class="input-field" type="text" id="userUsername" placeholder="اسم المستخدم"/>
     </div>
     <div class="input-group">
-      <label class="input-label">🔑 الرقم السري *</label>
+      <label class="input-label"><span data-i18n="userLabelPass">الرقم السري</span></label>
       <input class="input-field" type="password" id="userPassword" placeholder="الرقم السري"/>
     </div>
     <div class="input-group">
@@ -109,17 +109,17 @@
     </div>
     <nav class="sidebar-nav">
       <span class="nav-group-label">المبيعات</span>
-      <a class="nav-item" href="sale.html"><i class="fa-solid fa-cash-register nav-icon"></i><span class="nav-label">واجهة البيع</span></a>
+      <a class="nav-item" href="sale.html"><span class="nav-label">واجهة البيع</span></a>
       <span class="nav-group-label">الإدارة</span>
-      <a class="nav-item" href="inventory.html" data-role="admin,manager"><i class="fa-solid fa-boxes-stacked nav-icon"></i><span class="nav-label">المخزون</span></a>
-      <a class="nav-item" href="customers.html"><i class="fa-solid fa-users nav-icon"></i><span class="nav-label">الزبائن</span></a>
-      <a class="nav-item" href="reports.html" data-role="admin,manager"><i class="fa-solid fa-chart-line nav-icon"></i><span class="nav-label">إدارة الأعمال</span></a>
-      <a class="nav-item" href="suppliers.html" data-role="admin,manager"><i class="fa-solid fa-truck nav-icon"></i><span class="nav-label">الموردون</span></a>
+      <a class="nav-item" href="inventory.html" data-role="admin,manager"><span class="nav-label">المخزون</span></a>
+      <a class="nav-item" href="customers.html"><span class="nav-label">الزبائن</span></a>
+      <a class="nav-item" href="reports.html" data-role="admin,manager"><span class="nav-label">إدارة الأعمال</span></a>
+      <a class="nav-item" href="suppliers.html" data-role="admin,manager"><span class="nav-label">الموردون</span></a>
       <span class="nav-group-label">النظام</span>
-      <a class="nav-item active" href="users.html" data-role="admin"><i class="fa-solid fa-user-shield nav-icon"></i><span class="nav-label">المستخدمون</span></a>
-      <a class="nav-item" href="settings.html" data-role="admin,manager"><i class="fa-solid fa-gear nav-icon"></i><span class="nav-label">الإعدادات</span></a>
+      <a class="nav-item active" href="users.html" data-role="admin"><span class="nav-label">المستخدمون</span></a>
+      <a class="nav-item" href="settings.html" data-role="admin,manager"><span class="nav-label">الإعدادات</span></a>
       <div class="nav-divider"></div>
-      <div class="nav-item danger" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket nav-icon"></i><span class="nav-label">خروج</span></div>
+      <div class="nav-item danger" onclick="doLogout()"><span class="nav-label">خروج</span></div>
     </nav>
     <div class="sidebar-footer"><span id="sidebarVersion">v6.0.0</span><span>POS DZ 2026</span></div>
   </div>
