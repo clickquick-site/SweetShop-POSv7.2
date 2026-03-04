@@ -163,14 +163,14 @@ async function loadUsers() {
   }).join('');
 }
 
-async function saveUser() {
+async async function saveUser() {
   const id = document.getElementById('editUserId').value;
   const username = document.getElementById('userUsername').value.trim();
   const password = document.getElementById('userPassword').value.trim();
   const role = document.getElementById('userRole').value;
   if (!username) { toast('اسم المستخدم مطلوب', 'warning'); return; }
   const data = { username, role, createdAt: new Date().toISOString() };
-  if (password) data.password = hashPassword(password);
+  if (password) data.password = await hashPasswordSHA(password);
   if (id) {
     const existing = await dbGet('users', parseInt(id));
     data.id = parseInt(id);
@@ -179,7 +179,7 @@ async function saveUser() {
     toast('تم التعديل ✅', 'success');
   } else {
     if (!password) { toast('الرقم السري مطلوب', 'warning'); return; }
-    data.password = hashPassword(password);
+    data.password = await hashPasswordSHA(password);
     await dbAdd('users', data);
     toast('تمت الإضافة ✅', 'success');
   }
@@ -209,14 +209,14 @@ async function deleteUser(id) {
   loadUsers();
 }
 
-async function changeAdminPass() {
+async async function changeAdminPass() {
   const oldPass = document.getElementById('oldPass').value;
   const newPass = document.getElementById('newPass').value;
   if (!oldPass || !newPass) { toast('يرجى ملء الحقول', 'warning'); return; }
   const users = await dbGetAll('users');
   const admin = users.find(u => u.role === 'admin');
-  if (admin.password !== hashPassword(oldPass)) { toast('الرقم السري الحالي غير صحيح', 'error'); return; }
-  admin.password = hashPassword(newPass);
+  const oldOk = await verifyPassword(oldPass, admin.password); if (!oldOk) { toast('الرقم السري الحالي غير صحيح', 'error'); return; }
+  admin.password = await hashPasswordSHA(newPass);
   await dbPut('users', admin);
   toast('تم تغيير كلمة المرور ✅', 'success');
   try { notifPasswordChange(admin.username); } catch(e) {}
