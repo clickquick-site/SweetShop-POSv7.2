@@ -252,18 +252,18 @@
     </div>
   </div>
   <nav class="sidebar-nav">
-      <span class="nav-group-label">المبيعات</span>
-      <a class="nav-item active" href="sale.html"><i class="fa-solid fa-cash-register nav-icon"></i><span class="nav-label">واجهة البيع</span></a>
-      <span class="nav-group-label">الإدارة</span>
-      <a class="nav-item" href="inventory.html" data-role="admin,manager"><i class="fa-solid fa-boxes-stacked nav-icon"></i><span class="nav-label">المخزون</span></a>
-      <a class="nav-item" href="customers.html"><i class="fa-solid fa-users nav-icon"></i><span class="nav-label">الزبائن</span></a>
-      <a class="nav-item" href="reports.html" data-role="admin,manager"><i class="fa-solid fa-chart-line nav-icon"></i><span class="nav-label">إدارة الأعمال</span></a>
-      <a class="nav-item" href="suppliers.html" data-role="admin,manager"><i class="fa-solid fa-truck nav-icon"></i><span class="nav-label">الموردون</span></a>
-      <span class="nav-group-label">النظام</span>
-      <a class="nav-item" href="users.html" data-role="admin"><i class="fa-solid fa-user-shield nav-icon"></i><span class="nav-label">المستخدمون</span></a>
-      <a class="nav-item" href="settings.html" data-role="admin,manager"><i class="fa-solid fa-gear nav-icon"></i><span class="nav-label">الإعدادات</span></a>
-      <div class="nav-divider"></div>
-      <div class="nav-item danger" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket nav-icon"></i><span class="nav-label">خروج</span></div>
+      <span class="nav-group-label" data-i18n="navGroupSale">المبيعات</span>
+      <a class="nav-item active" href="sale.html"><span class="nav-label" data-i18n="navSale">واجهة البيع</span></a>
+      <span class="nav-group-label" data-i18n="navGroupManage">الإدارة</span>
+      <a class="nav-item" href="inventory.html" data-role="admin,manager"><span class="nav-label" data-i18n="navInventory">المخزون</span></a>
+      <a class="nav-item" href="customers.html"><span class="nav-label" data-i18n="navCustomers">الزبائن</span></a>
+      <a class="nav-item" href="reports.html" data-role="admin,manager"><span class="nav-label" data-i18n="navReports">إدارة الأعمال</span></a>
+      <a class="nav-item" href="suppliers.html" data-role="admin,manager"><span class="nav-label" data-i18n="navSuppliers">الموردون</span></a>
+      <span class="nav-group-label" data-i18n="navGroupSystem">النظام</span>
+      <a class="nav-item" href="users.html" data-role="admin"><span class="nav-label" data-i18n="navUsers">المستخدمون</span></a>
+      <a class="nav-item" href="settings.html" data-role="admin,manager"><span class="nav-label" data-i18n="navSettings">الإعدادات</span></a>
+
+      <div class="nav-item danger" onclick="doLogout()"><span class="nav-label" data-i18n="navLogout">خروج</span></div>
     </nav>
   <div class="sidebar-footer">
     <span class="app-version" id="sidebarVersion">v6.0.0</span>
@@ -279,6 +279,10 @@
 let cart = JSON.parse(sessionStorage.getItem('posdz_cart')||'[]');
 let allProducts = [];
 let currency = 'DA';
+function getCurrency() {
+  // تقرأ دائماً من الـ i18n المحدَّث أو الإعداد المخزَّن
+  return (window._i18n && window._i18n.currencyLabel) || currency || 'DA';
+}
 let activeInput = null;
 // Scale
 let scaleProductId = null;
@@ -347,7 +351,7 @@ function updateScaleTotal(){
   const w=SCALE.lastWeight||0;
   const p=parseFloat(document.getElementById('scalePriceInput').value)||0;
   const total=(w*p).toFixed(2);
-  document.getElementById('scaleTotalDisplay').textContent=total+' '+currency;
+  document.getElementById('scaleTotalDisplay').textContent=total+' '+getCurrency();
 }
 document.getElementById&&document.addEventListener('DOMContentLoaded',()=>{
   const pi=document.getElementById('scalePriceInput');
@@ -365,7 +369,7 @@ async function addScaleItem(){
   const tempId=-Date.now();
   cart.push({productId:tempId,name,quantity:1,unitPrice:total,total,isScale:true,weight:w});
   saveCartSession(); renderCart(); updateTotal(); playSound('add');
-  toast(`تمت إضافة ${name} — ${total.toFixed(2)} ${currency}`,'success');
+  toast(`تمت إضافة ${name} — ${total.toFixed(2)} ${getCurrency()}`,'success');
 }
 
 // ── Customer select ────────────────────────────────────────────
@@ -436,7 +440,7 @@ function getTotal(){
 
 function updateTotal(){
   const{total,discount}=getTotal();
-  document.getElementById('totalAmount').textContent=total.toFixed(2)+' '+currency;
+  document.getElementById('totalAmount').textContent=total.toFixed(2)+' '+getCurrency();
   const qty=cart.reduce((s,i)=>s+i.quantity,0);
   document.getElementById('itemsCount').textContent=qty+' صنف ('+cart.length+')';
   document.getElementById('discountBadge').textContent=discount>0?'خصم: -'+discount.toFixed(2):'';
