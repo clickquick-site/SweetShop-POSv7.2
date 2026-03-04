@@ -38,37 +38,37 @@
   <div class="main-content">
     <!-- Page Header -->
     <div class="section-header">
-      <a href="sale.html" class="back-btn">← رجوع</a>
-      <h2 class="page-title">📦 إدارة المخزون</h2>
+      <a href="sale.html" class="back-btn">← <span data-i18n="btnBack">رجوع</span></a>
+      <h2 class="page-title"><span data-i18n="titleInventory">إدارة المخزون</span></h2>
     </div>
 
     <!-- Alerts -->
     <div class="alert-box" id="alertsBox" style="display:none;">
-      <h4>⚠️ تنبيهات المخزون</h4>
+      <h4><span data-i18n="invAlerts">تنبيهات المخزون</span></h4>
       <div id="alertsList"></div>
     </div>
 
     <!-- Tabs -->
     <div class="tabs-bar">
-      <button class="tab-btn active" onclick="switchTab('all')">📋 كل المنتجات</button>
-      <button class="tab-btn" onclick="switchTab('add')">➕ إضافة منتج</button>
-      <button class="tab-btn" onclick="switchTab('families')">🏷️ العائلات</button>
-      <button class="tab-btn" onclick="switchTab('import')">📤 استيراد / تصدير</button>
+      <button class="tab-btn active" onclick="switchTab('all')"><span data-i18n="invTabAll">كل المنتجات</span></button>
+      <button class="tab-btn" onclick="switchTab('add')"><span data-i18n="invAddProduct">إضافة منتج</span></button>
+      <button class="tab-btn" onclick="switchTab('families')"><span data-i18n="invTabFamilies">العائلات</span></button>
+      <button class="tab-btn" onclick="switchTab('import')"><span data-i18n="invTabImport">استيراد / تصدير</span></button>
     </div>
 
     <!-- TAB: All Products -->
     <div class="tab-content active" id="tab-all">
       <div class="search-bar">
         <span class="search-icon">🔍</span>
-        <input type="text" id="productSearch" placeholder="ابحث عن اسم المنتج أو الباركود..." oninput="filterProducts()"/>
+        <input type="text" id="productSearch" placeholder="ابحث عن اسم المنتج أو الباركود..." data-i18n-ph="invSearch" oninput="filterProducts()"/>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
         <table class="data-table" id="productsTable">
           <thead>
             <tr>
-              <th>المنتج</th><th>العائلة</th><th>الوحدة</th>
-              <th>سعر الشراء</th><th>سعر البيع</th><th>المخزون</th>
-              <th>الصلاحية</th><th>تنبيه</th><th>إجراءات</th>
+              <th data-i18n="invColProduct">المنتج</th><th data-i18n="invColFamily">العائلة</th><th data-i18n="invColUnit">الوحدة</th>
+              <th data-i18n="invColBuyPrice">سعر الشراء</th><th data-i18n="invColPrice">سعر البيع</th><th data-i18n="invColQty">المخزون</th>
+              <th data-i18n="invColExpiry">الصلاحية</th><th data-i18n="invColAlert">تنبيه</th><th data-i18n="invColActions">إجراءات</th>
             </tr>
           </thead>
           <tbody id="productsTbody"></tbody>
@@ -79,55 +79,55 @@
     <!-- TAB: Add Product -->
     <div class="tab-content" id="tab-add">
       <div class="card">
-        <h3 id="formTitle" style="color:var(--primary-light);margin-bottom:18px;">➕ إضافة منتج جديد</h3>
+        <h3 id="formTitle" style="color:var(--primary-light);margin-bottom:18px;"><span data-i18n="invFormTitleAdd">إضافة منتج جديد</span></h3>
         <input type="hidden" id="editProductId"/>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <div class="input-group">
-            <label class="input-label">🏷️ العائلة</label>
+            <label class="input-label"><span data-i18n="invColFamily">العائلة</span></label>
             <select class="select-field" id="productFamily">
               <option value="">-- بدون عائلة --</option>
             </select>
           </div>
           <div class="input-group">
-            <label class="input-label">📝 اسم المنتج *</label>
+            <label class="input-label"><span data-i18n="invLabelName">اسم المنتج</span></label>
             <input class="input-field" type="text" id="productName" placeholder="أدخل اسم المنتج"/>
           </div>
           <div class="input-group">
-            <label class="input-label">📏 الحجم / المقاس / السعة</label>
+            <label class="input-label"><span data-i18n="invLabelSize">الحجم / المقاس</span></label>
             <input class="input-field" type="text" id="productSize" placeholder="مثال: 500ml، L، XL"/>
           </div>
           <div class="input-group">
-            <label class="input-label">📦 الوحدة</label>
+            <label class="input-label"><span data-i18n="invColUnit">الوحدة</span></label>
             <select class="select-field" id="productUnit">
               <option>قطعة</option><option>كيلو</option><option>غرام</option>
               <option>لتر</option><option>علبة</option><option>كرتون</option>
             </select>
           </div>
           <div class="input-group">
-            <label class="input-label">💰 سعر الشراء</label>
+            <label class="input-label"><span data-i18n="invColBuyPrice">سعر الشراء</span></label>
             <input class="input-field" type="number" id="productBuyPrice" placeholder="0.00" min="0"/>
           </div>
           <div class="input-group">
-            <label class="input-label">💵 سعر البيع *</label>
+            <label class="input-label"><span data-i18n="invColPrice">سعر البيع</span></label>
             <input class="input-field" type="number" id="productSellPrice" placeholder="0.00" min="0"/>
           </div>
           <div class="input-group">
-            <label class="input-label">🔢 الكمية</label>
+            <label class="input-label"><span data-i18n="invColQty">الكمية</span></label>
             <input class="input-field" type="number" id="productQty" placeholder="0" min="0"/>
           </div>
           <div class="input-group">
-            <label class="input-label">📅 تاريخ نهاية الصلاحية</label>
+            <label class="input-label"><span data-i18n="invLabelExpiry">تاريخ نهاية الصلاحية</span></label>
             <input class="input-field" type="date" id="productExpiry"/>
           </div>
           <div class="input-group" style="grid-column:1/-1;">
-            <label class="input-label">📷 باركود</label>
+            <label class="input-label"><span data-i18n="invColBarcode">باركود</span></label>
             <input class="input-field" type="text" id="productBarcode" placeholder="أدخل رقم الباركود أو امسحه"/>
           </div>
         </div>
         <div id="nameError" class="text-danger text-sm mt-2" style="display:none;">⚠️ هذا الاسم موجود مسبقاً</div>
         <div style="display:flex;gap:12px;margin-top:20px;">
-          <button class="btn btn-success" onclick="saveProduct()">💾 حفظ المنتج</button>
-          <button class="btn btn-secondary" onclick="clearProductForm()">🗑️ تفريغ الحقول</button>
+          <button class="btn btn-success" onclick="saveProduct()"><span data-i18n="btnSave">حفظ المنتج</span></button>
+          <button class="btn btn-secondary" onclick="clearProductForm()"><span data-i18n="invBtnClear">تفريغ الحقول</span></button>
         </div>
       </div>
     </div>
@@ -135,10 +135,10 @@
     <!-- TAB: Families -->
     <div class="tab-content" id="tab-families">
       <div class="card">
-        <h3 style="color:var(--primary-light);margin-bottom:16px;">🏷️ إدارة العائلات</h3>
+        <h3 style="color:var(--primary-light);margin-bottom:16px;"><span data-i18n="invTabFamilies">إدارة العائلات</span></h3>
         <div style="display:flex;gap:10px;margin-bottom:20px;">
           <input class="input-field" type="text" id="familyInput" placeholder="اسم العائلة (مثال: مشروبات، حلويات...)" style="flex:1;"/>
-          <button class="btn btn-primary" onclick="addFamily()">➕ إضافة</button>
+          <button class="btn btn-primary" onclick="addFamily()"><span data-i18n="btnAdd">إضافة</span></button>
         </div>
         <div id="familiesList" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
       </div>
@@ -149,7 +149,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
         <!-- Import -->
         <div class="card">
-          <h3 style="color:var(--primary-light);margin-bottom:16px;">📥 استيراد المنتجات</h3>
+          <h3 style="color:var(--primary-light);margin-bottom:16px;"><span data-i18n="invImportTitle">استيراد المنتجات</span></h3>
           <p class="text-muted text-sm mb-3">قم بتحميل نموذج CSV ثم ارفع الملف المعبأ.</p>
           <label style="display:block;background:var(--bg-input);border:2px dashed var(--border);border-radius:var(--radius);padding:30px;text-align:center;cursor:pointer;transition:var(--transition);" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
             <div style="font-size:2rem;">📂</div>
@@ -160,10 +160,10 @@
         </div>
         <!-- Export -->
         <div class="card">
-          <h3 style="color:var(--primary-light);margin-bottom:16px;">📤 تصدير المنتجات</h3>
+          <h3 style="color:var(--primary-light);margin-bottom:16px;"><span data-i18n="invExportTitle">تصدير المنتجات</span></h3>
           <p class="text-muted text-sm mb-3">تصدير قائمة المنتجات الكاملة أو تحميل نموذج فارغ.</p>
-          <button class="btn btn-primary btn-full mb-3" onclick="exportProducts()">📥 تصدير كل المنتجات (CSV)</button>
-          <button class="btn btn-secondary btn-full" onclick="downloadCSVTemplate()">📄 تحميل نموذج CSV</button>
+          <button class="btn btn-primary btn-full mb-3" onclick="exportProducts()"><span data-i18n="invBtnExport">تصدير كل المنتجات (CSV)</span></button>
+          <button class="btn btn-secondary btn-full" onclick="downloadCSVTemplate()"><span data-i18n="invBtnTemplate">تحميل نموذج CSV</span></button>
         </div>
       </div>
     </div>
@@ -174,14 +174,14 @@
 <div class="modal-overlay" id="importConfirmModal">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">⚠️ تأكيد الاستيراد</span>
+      <span class="modal-title"><span data-i18n="invImportConfirm">تأكيد الاستيراد</span>
       <button class="modal-close" onclick="closeModal('importConfirmModal')">✕</button>
     </div>
     <div id="importConflicts"></div>
     <div class="modal-footer">
-      <button class="btn btn-success" onclick="confirmImport(true)">✅ قبول التحديث</button>
-      <button class="btn btn-secondary" onclick="confirmImport(false)">⏭️ تجاهل المنتجات المشابهة</button>
-      <button class="btn btn-danger" onclick="closeModal('importConfirmModal')">إلغاء</button>
+      <button class="btn btn-success" onclick="confirmImport(true)"><span data-i18n="invImportAccept">قبول التحديث</span></button>
+      <button class="btn btn-secondary" onclick="confirmImport(false)"><span data-i18n="invImportSkip">تجاهل المنتجات المشابهة</span></button>
+      <button class="btn btn-danger" onclick="closeModal('importConfirmModal')"><span data-i18n="btnCancel">إلغاء</span></button>
     </div>
   </div>
 </div>
@@ -203,17 +203,17 @@
     </div>
     <nav class="sidebar-nav">
       <span class="nav-group-label">المبيعات</span>
-      <a class="nav-item" href="sale.html"><i class="fa-solid fa-cash-register nav-icon"></i><span class="nav-label">واجهة البيع</span></a>
+      <a class="nav-item" href="sale.html"><span class="nav-label">واجهة البيع</span></a>
       <span class="nav-group-label">الإدارة</span>
-      <a class="nav-item active" href="inventory.html" data-role="admin,manager"><i class="fa-solid fa-boxes-stacked nav-icon"></i><span class="nav-label">المخزون</span></a>
-      <a class="nav-item" href="customers.html"><i class="fa-solid fa-users nav-icon"></i><span class="nav-label">الزبائن</span></a>
-      <a class="nav-item" href="reports.html" data-role="admin,manager"><i class="fa-solid fa-chart-line nav-icon"></i><span class="nav-label">إدارة الأعمال</span></a>
-      <a class="nav-item" href="suppliers.html" data-role="admin,manager"><i class="fa-solid fa-truck nav-icon"></i><span class="nav-label">الموردون</span></a>
+      <a class="nav-item active" href="inventory.html" data-role="admin,manager"><span class="nav-label">المخزون</span></a>
+      <a class="nav-item" href="customers.html"><span class="nav-label">الزبائن</span></a>
+      <a class="nav-item" href="reports.html" data-role="admin,manager"><span class="nav-label">إدارة الأعمال</span></a>
+      <a class="nav-item" href="suppliers.html" data-role="admin,manager"><span class="nav-label">الموردون</span></a>
       <span class="nav-group-label">النظام</span>
-      <a class="nav-item" href="users.html" data-role="admin"><i class="fa-solid fa-user-shield nav-icon"></i><span class="nav-label">المستخدمون</span></a>
-      <a class="nav-item" href="settings.html" data-role="admin,manager"><i class="fa-solid fa-gear nav-icon"></i><span class="nav-label">الإعدادات</span></a>
+      <a class="nav-item" href="users.html" data-role="admin"><span class="nav-label">المستخدمون</span></a>
+      <a class="nav-item" href="settings.html" data-role="admin,manager"><span class="nav-label">الإعدادات</span></a>
       <div class="nav-divider"></div>
-      <div class="nav-item danger" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket nav-icon"></i><span class="nav-label">خروج</span></div>
+      <div class="nav-item danger" onclick="doLogout()"><span class="nav-label">خروج</span></div>
     </nav>
     <div class="sidebar-footer"><span id="sidebarVersion">v6.0.0</span><span>POS DZ 2026</span></div>
   </div>
