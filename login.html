@@ -182,7 +182,7 @@
     </div>
 
     <div class="card-footer">
-      <p>POS DZ v6.0.0 &nbsp;|&nbsp; 2026 بوس ديزاد — جميع الحقوق محفوظة ®</p>
+      <p>POS DZ v6.0.0 &nbsp;|&nbsp; 2026 POS DZ — جميع الحقوق محفوظة ®</p>
     </div>
   </div>
 </div>
@@ -305,7 +305,9 @@ async function doLogin() {
   }
 
   const users = await dbGetAll('users');
-  const user = users.find(u => u.username === username && u.password === hashPassword(password));
+  // verifyPassword تدعم كلا الـ hash (sha_ و h_)
+  const results = await Promise.all(users.map(u => verifyPassword(password, u.password).then(ok => ok ? u : null)));
+  const user = results.find(u => u !== null);
 
   if (user) {
     errEl.textContent = '';
