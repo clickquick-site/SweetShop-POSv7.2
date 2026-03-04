@@ -546,6 +546,18 @@ const APP_I18N = {
     // حوارات
     dialogYes:'نعم', dialogNo:'لا', dialogOk:'حسناً',
     currencyLabel:'دج',
+    // تقارير إضافية
+    repBackToSale:'رجوع للبيع', repPeriodWeek:'أسبوعي', repPeriodMonth:'شهري', repPeriodYear:'سنوي',
+    // إعدادات labels
+    saveBtn:'💾 حفظ', labelDate:'صيغة التاريخ', labelCurrency:'رمز العملة',
+    labelLang:'لغة البرنامج', labelLangDesc:'تطبيق فوري على كل الصفحات',
+    labelFont:'خط التطبيق', labelFontSize:'حجم الخط',
+    labelBgMode:'وضع الخلفية', bgDark:'داكن', bgLight:'فاتح',
+    labelAccentColor:'لون الأيقونات والأزرار',
+    labelSoundAdd:'صوت إضافة المنتج', labelSoundSell:'صوت إتمام البيع', labelSoundBtn:'صوت الأزرار',
+    labelBarcode:'تفعيل قارئ الباركود', labelBarcodeDesc:'يضيف المنتجات تلقائياً',
+    labelBarcodeAuto:'حجز المنتجات تلقائياً',
+    labelTouchKb:'الكيبورد الافتراضي', labelTouchKbDesc:'زر قابل للسحب على جانب الشاشة',
     // المخزون إضافي
     invAlerts:'تنبيهات المخزون', invTabAll:'كل المنتجات', invTabFamilies:'العائلات',
     invTabImport:'استيراد / تصدير', invFormTitleAdd:'إضافة منتج جديد',
@@ -621,6 +633,16 @@ const APP_I18N = {
     confirmDelete:'Confirmer la suppression?', confirmLogout:'Se déconnecter?', confirmCloseDay:'Clôturer la journée?',
     dialogYes:'Oui', dialogNo:'Non', dialogOk:'OK',
     currencyLabel:'DA',
+    repBackToSale:'Back to Sales', repPeriodWeek:'Weekly', repPeriodMonth:'Monthly', repPeriodYear:'Yearly',
+    saveBtn:'💾 Save', labelDate:'Date format', labelCurrency:'Currency',
+    labelLang:'App language', labelLangDesc:'Applied immediately to all pages',
+    labelFont:'App font', labelFontSize:'Font size',
+    labelBgMode:'Background mode', bgDark:'Dark', bgLight:'Light',
+    labelAccentColor:'Icons & buttons color',
+    labelSoundAdd:'Product add sound', labelSoundSell:'Sale complete sound', labelSoundBtn:'Button sounds',
+    labelBarcode:'Enable barcode scanner', labelBarcodeDesc:'Adds products automatically',
+    labelBarcodeAuto:'Auto-add by scanner',
+    labelTouchKb:'Touch keyboard', labelTouchKbDesc:'Draggable side button',
     invAlerts:'Stock alerts', invTabAll:'All products', invTabFamilies:'Families',
     invTabImport:'Import / Export', invFormTitleAdd:'Add new product',
     invColUnit:'Unit', invColExpiry:'Expiry', invColAlert:'Alert',
@@ -705,6 +727,35 @@ const APP_I18N = {
     confirmDelete:'Confirm deletion?', confirmLogout:'Logout?', confirmCloseDay:'Close the day?',
     dialogYes:'Yes', dialogNo:'No', dialogOk:'OK',
     currencyLabel:'DA',
+    // Inventory extra keys
+    invAlerts:'Stock alerts', invTabAll:'All products', invTabFamilies:'Families',
+    invTabImport:'Import / Export', invFormTitleAdd:'Add new product',
+    invColUnit:'Unit', invColExpiry:'Expiry', invColAlert:'Alert',
+    invLabelName:'Product name', invLabelSize:'Size / Format', invLabelExpiry:'Expiry date',
+    invBtnClear:'Clear fields', invImportTitle:'Import products', invExportTitle:'Export products',
+    invBtnExport:'Export all (CSV)', invBtnTemplate:'Download CSV template',
+    invImportConfirm:'Confirm import', invImportAccept:'Accept update', invImportSkip:'Skip duplicates',
+    // Suppliers
+    supBtnAdd:'Add supplier', supSearch:'Search supplier...',
+    supAddress:'Address', supActivity:'Activity type',
+    // Users
+    userBtnAdd:'Add user', userColName:'User',
+    userColRole:'Role', userColDate:'Creation date',
+    userLabelName:'Username', userLabelPass:'Password',
+    // Customers
+    custDebtDate:'Debt date:',
+    // Reports
+    repBackToSale:'Back to Sales', repPeriodWeek:'Weekly', repPeriodMonth:'Monthly', repPeriodYear:'Yearly',
+    // Settings labels
+    saveBtn:'💾 Save', labelDate:'Date format', labelCurrency:'Currency',
+    labelLang:'App language', labelLangDesc:'Applied immediately to all pages',
+    labelFont:'App font', labelFontSize:'Font size',
+    labelBgMode:'Background mode', bgDark:'Dark', bgLight:'Light',
+    labelAccentColor:'Icons & buttons color',
+    labelSoundAdd:'Product add sound', labelSoundSell:'Sale complete sound', labelSoundBtn:'Button sounds',
+    labelBarcode:'Enable barcode scanner', labelBarcodeDesc:'Adds products automatically',
+    labelBarcodeAuto:'Auto-add by scanner',
+    labelTouchKb:'Touch keyboard', labelTouchKbDesc:'Draggable side button',
   }
 };
 
