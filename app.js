@@ -246,16 +246,32 @@ async function printInvoice(sale,items) {
   const w={'58mm':'54mm','80mm':'76mm','A5':'148mm','A4':'210mm'}[pSize]||'76mm';
   const now=new Date(sale.date||new Date()),dStr=now.toLocaleDateString('ar-DZ'),tStr=now.toLocaleTimeString('ar-DZ',{hour:'2-digit',minute:'2-digit'});
   let lbl=sale.debtSettlement&&sale.partialSettlement?`فاتورة تسديد جزئي #${sale.invoiceNumber}`:sale.debtSettlement?`فاتورة تسديد #${sale.invoiceNumber}`:sale.isDebt?`فاتورة دين #${sale.invoiceNumber}`:`فاتورة: #${sale.invoiceNumber}`;
-  let html=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>@page{margin:4mm;size:${w} auto;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Courier New',monospace;font-size:12px;color:#000;width:${w};-webkit-print-color-adjust:exact;}.c{text-align:center;}.b{font-weight:900;}.xl{font-size:16px;font-weight:900;}.dl{border-top:2px solid #000;margin:5px 0;}.sl{border-top:1px dashed #000;margin:5px 0;}.rw{display:flex;justify-content:space-between;align-items:baseline;}table{width:100%;border-collapse:collapse;font-size:11px;}th{font-weight:900;border-bottom:1px solid #000;padding:3px 2px;text-align:right;}td{padding:3px 2px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}@media print{*{color:#000!important;}}</style></head><body>`;
+  let html=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>@page{margin:4mm;size:${w} auto;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,'Tahoma',sans-serif;font-size:10px;color:#000;width:${w};-webkit-print-color-adjust:exact;}.c{text-align:center;}.b{font-weight:900;}.xl{font-size:14px;font-weight:900;}.dl{border-top:2px solid #000;margin:4px 0;}.sl{border-top:1px dashed #000;margin:4px 0;}.rw{display:flex;justify-content:space-between;align-items:baseline;}table{width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed;}th{font-weight:900;border-bottom:1px solid #000;padding:2px 1px;text-align:right;}td{padding:2px 1px;font-weight:700;word-break:break-all;}@media print{*{color:#000!important;}}</style></head><body>`;
   html+=`<div class="rw b"><span>${lbl}</span><span>${dStr} ${tStr}</span></div><div class="dl"></div>`;
   if(pLogo==='1'&&sLogo)html+=`<div class="c"><img src="${sLogo}" style="max-width:70px;max-height:70px;display:block;margin:0 auto 4px;"/></div>`;
   if(pName==='1'&&sName)html+=`<div class="c xl b">${sName}</div>`;
   if(pPhone==='1'&&sPhone)html+=`<div class="c b">${sPhone}</div>`;
   if(pAddr==='1'&&sAddr)html+=`<div class="c b">${sAddr}</div>`;
   if(sale.customerName){html+=`<div class="sl"></div><div class="rw"><span class="b">الزبون:</span><span class="b">${sale.customerName}</span></div>`;if(sale.customerPhone)html+=`<div class="rw"><span class="b">الهاتف:</span><span class="b">${sale.customerPhone}</span></div>`;}
-  html+=`<div class="dl"></div><table style="table-layout:fixed;width:100%"><thead><tr><th style="width:42%">المنتج</th><th style="width:8%;text-align:center">ك</th><th style="width:22%;text-align:center">السعر</th><th style="width:28%;text-align:left">المجموع</th></tr></thead><tbody>`;
-  items.forEach(i=>html+=`<tr><td class="b">${i.productName}</td><td class="b" style="text-align:center">${i.quantity}</td><td class="b" style="text-align:center">${parseFloat(i.unitPrice).toFixed(2)}</td><td class="b" style="text-align:left">${parseFloat(i.total).toFixed(2)}</td></tr>`);
-  html+=`</tbody></table><div class="dl"></div>`;
+  html+=`<div class="dl"></div>`;
+  // رأس الجدول
+  html+=`<div style="display:flex;border-bottom:1px solid #000;padding:2px 0;margin-bottom:2px;font-weight:900;">`+
+        `<span style="flex:2.2">المنتج</span>`+
+        `<span style="flex:0.5;text-align:center">ك</span>`+
+        `<span style="flex:1.4;text-align:center">السعر</span>`+
+        `<span style="flex:1.4;text-align:left">المجموع</span>`+
+        `</div>`;
+  // أسطر المنتجات
+  items.forEach(i=>{
+    const nm=i.productName.length>16?i.productName.slice(0,15)+'…':i.productName;
+    html+=`<div style="display:flex;margin:2px 0;">`+
+          `<span style="flex:2.2;font-weight:700">${nm}</span>`+
+          `<span style="flex:0.5;text-align:center;font-weight:700">${i.quantity}</span>`+
+          `<span style="flex:1.4;text-align:center;font-weight:700">${parseFloat(i.unitPrice).toFixed(2)}</span>`+
+          `<span style="flex:1.4;text-align:left;font-weight:700">${parseFloat(i.total).toFixed(2)}</span>`+
+          `</div>`;
+  });
+  html+=`<div class="dl"></div>`;
   if(sale.discount>0)html+=`<div class="rw b"><span>خصم:</span><span>- ${parseFloat(sale.discount).toFixed(2)} ${cur}</span></div>`;
   html+=`<div class="rw xl b"><span>الإجمالي:</span><span>${parseFloat(sale.total).toFixed(2)} ${cur}</span></div>`;
   if(sale.paid>0){html+=`<div class="rw b"><span>المدفوع:</span><span>${parseFloat(sale.paid).toFixed(2)} ${cur}</span></div>`;if(sale.isDebt)html+=`<div class="rw b"><span>الدين:</span><span>${(sale.total-sale.paid).toFixed(2)} ${cur}</span></div>`;}
