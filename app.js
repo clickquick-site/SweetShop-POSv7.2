@@ -7,7 +7,7 @@ const APP_VERSION = { number:'6.0.0', date:'2026-03-02', name:'POS DZ' };
 // ══════════════════════════════════════════════════════════════
 //  IndexedDB
 // ══════════════════════════════════════════════════════════════
-const DB_NAME = 'POSDZ_DB', DB_VERSION = 2;
+const DB_NAME = 'POSDZ_DB', DB_VERSION = 4;
 let db = null;
 
 function openDB() {
@@ -31,6 +31,8 @@ function openDB() {
       if (!d.objectStoreNames.contains('purchases'))  { const s=d.createObjectStore('purchases',{keyPath:'id',autoIncrement:true}); s.createIndex('date','date',{unique:false}); s.createIndex('supplierId','supplierId',{unique:false}); }
       if (!d.objectStoreNames.contains('debtPayments')){ const s=d.createObjectStore('debtPayments',{keyPath:'id',autoIncrement:true}); s.createIndex('debtId','debtId',{unique:false}); s.createIndex('customerId','customerId',{unique:false}); s.createIndex('date','date',{unique:false}); }
       if (!d.objectStoreNames.contains('syncQueue'))  { const s=d.createObjectStore('syncQueue',{keyPath:'id',autoIncrement:true}); s.createIndex('createdAt','createdAt',{unique:false}); }
+      if (!d.objectStoreNames.contains('workers'))    { d.createObjectStore('workers',{keyPath:'id',autoIncrement:true}); }
+      if (!d.objectStoreNames.contains('workerPayments')) { const s=d.createObjectStore('workerPayments',{keyPath:'id',autoIncrement:true}); s.createIndex('workerId','workerId',{unique:false}); s.createIndex('date','date',{unique:false}); }
     };
     req.onsuccess = async (e) => { db=e.target.result; await seedDefaults(); resolve(db); };
     req.onerror   = () => reject(req.error);
@@ -61,6 +63,7 @@ async function seedDefaults() {
     soundAdd:'1',soundSell:'1',soundButtons:'1',barcodeReader:'1',barcodeAuto:'1',touchKeyboard:'0',
     paperSize:'80mm',printLogo:'1',printName:'1',printPhone:'1',printWelcome:'1',printAddress:'1',printBarcode:'1',
     barcodeFont:'Cairo',barcodeType:'CODE128',barcodeShowStore:'1',barcodeShowName:'1',barcodeShowPrice:'1',
+    barcodeFontSize:'12',barcodeLabelSize:'58x38',
     autoBackup:'1',invoiceNumber:'1',lowStockAlert:'5',expiryAlertDays:'30',lastResetDate:'',dailyCounter:'1',
     notifEnabled:'1',notifInApp:'1',notifLowStock:'1',notifOutStock:'1',notifDebt30:'1',notifExpiry:'1',notifLogin:'1',notifPwdChange:'1',
     emailEnabled:'0',emailSender:'',emailAppPassword:'',emailRecipient:'',emailOnSale:'1',emailOnLowStock:'1',emailOnDebt:'1',emailOnExpiry:'1',emailDailyReport:'1',
@@ -90,6 +93,53 @@ function saveSession(u)  { sessionStorage.setItem('posdz_user',JSON.stringify(u)
 function getSession()    { const u=sessionStorage.getItem('posdz_user'); return u?JSON.parse(u):null; }
 function clearSession()  { sessionStorage.removeItem('posdz_user'); }
 function requireAuth(r='index.html') { const u=getSession(); if(!u){window.location.href=r;return null;} return u; }
+
+// ══════════════════════════════════════════════
+// نظام إشعار انتهاء الجلسة (بدون غلق الصفحة)
+// ══════════════════════════════════════════════
+let _sessionTimer=null, _sessionWarnTimer=null, _sessionActive=true;
+const SESSION_MINUTES = 30; // دقائق الخمول قبل الإشعار
+const SESSION_WARN_MINUTES = 25; // تحذير قبل 5 دقائق
+
+function _resetSessionTimer() {
+  if(!getSession()) return;
+  clearTimeout(_sessionTimer); clearTimeout(_sessionWarnTimer);
+  _sessionActive = true;
+  // تحذير بعد 25 دقيقة
+  _sessionWarnTimer = setTimeout(() => {
+    _pushNotif('session_warn','⏰','تنبيه الجلسة',
+      `ستنتهي جلستك خلال 5 دقائق بسبب الخمول — انقر في أي مكان للتجديد`,'warning');
+  }, SESSION_WARN_MINUTES * 60 * 1000);
+  // إشعار انتهاء بعد 30 دقيقة
+  _sessionTimer = setTimeout(() => {
+    _sessionActive = false;
+    _pushNotif('session_expired','🔒','انتهت الجلسة',
+      `انتهت جلستك بسبب الخمول — سجّل الدخول مجدداً عند المتابعة`,'danger');
+    // تسجيل خروج صامت لكن يبقى المستخدم في نفس الصفحة
+    clearSession();
+    // عرض شريط تحذير في الصفحة
+    _showSessionExpiredBanner();
+  }, SESSION_MINUTES * 60 * 1000);
+}
+
+function _showSessionExpiredBanner() {
+  if(document.getElementById('_sessionBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = '_sessionBanner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(135deg,#c0392b,#e74c3c);color:#fff;text-align:center;padding:14px 16px;font-family:Cairo,sans-serif;font-weight:700;font-size:1rem;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+  banner.innerHTML = `🔒 انتهت الجلسة بسبب الخمول &nbsp;|&nbsp; <a href="index.html" style="color:#fff;text-decoration:underline;font-weight:900;">تسجيل الدخول مجدداً</a> &nbsp;<span style="opacity:0.7;font-size:0.85rem;">(بياناتك محفوظة)</span>`;
+  document.body.prepend(banner);
+}
+
+function _initSessionTimeout() {
+  if(!getSession()) return;
+  const events = ['click','keydown','mousemove','touchstart','scroll'];
+  events.forEach(ev => document.addEventListener(ev, () => {
+    if(!_sessionActive && !getSession()) return; // منتهية — لا تجدد
+    _resetSessionTimer();
+  }, { passive: true }));
+  _resetSessionTimer();
+}
 function requireRole(roles,r='sale.html') { const u=requireAuth(); if(!u)return null; if(!roles.includes(u.role)){window.location.href=r;return null;} return u; }
 
 // ══════════════════════════════════════════════════════════════
@@ -110,7 +160,11 @@ async function resetDailyCounter() { await dbPut('counter',{id:1,number:1,lastRe
 function todayStr() { return new Date().toISOString().split('T')[0]; }
 function _getLocale() { return {ar:'ar-DZ',fr:'fr-FR',en:'en-US'}[localStorage.getItem('posdz_lang')||'ar']||'ar-DZ'; }
 function formatDate(iso,fmt) {
-  if(!iso)return''; const d=new Date(iso),dy=String(d.getDate()).padStart(2,'0'),mo=String(d.getMonth()+1).padStart(2,'0'),yr=d.getFullYear();
+  if(!iso)return'';
+  // إذا كانت القيمة تاريخاً بدون وقت (YYYY-MM-DD) نضيف T00:00 لتجنب UTC off-by-one في UTC+1/+2
+  const dateStr = iso.length===10 ? iso+'T00:00:00' : iso;
+  const d=new Date(dateStr);
+  const dy=String(d.getDate()).padStart(2,'0'),mo=String(d.getMonth()+1).padStart(2,'0'),yr=d.getFullYear();
   if(!fmt||fmt==='DD/MM/YYYY')return`${dy}/${mo}/${yr}`; if(fmt==='MM/DD/YYYY')return`${mo}/${dy}/${yr}`; if(fmt==='YYYY/MM/DD')return`${yr}/${mo}/${dy}`; return`${dy}/${mo}/${yr}`;
 }
 function formatDateTime(iso) { if(!iso)return''; const d=new Date(iso),l=_getLocale(); return d.toLocaleDateString(l)+' '+d.toLocaleTimeString(l,{hour:'2-digit',minute:'2-digit'}); }
@@ -237,170 +291,337 @@ async function createBackup() {
 }
 
 // ══════════════════════════════════════════════════════════════
+//  Restore Backup
+// ══════════════════════════════════════════════════════════════
+async function restoreBackup(input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById('restoreStatus');
+  const showStatus = (msg, type='info') => {
+    if (!statusEl) return;
+    const colors = { info:'var(--bg-dark)', success:'rgba(16,185,129,0.15)', error:'rgba(239,68,68,0.15)', warn:'rgba(245,158,11,0.15)' };
+    statusEl.style.display = '';
+    statusEl.style.background = colors[type] || colors.info;
+    statusEl.style.color = type==='error' ? 'var(--danger)' : type==='success' ? 'var(--success)' : type==='warn' ? 'var(--warning)' : 'var(--text-primary)';
+    statusEl.innerHTML = msg;
+  };
+
+  showStatus('⏳ جاري قراءة الملف...');
+
+  // قراءة الملف
+  let bk;
+  try {
+    const text = await file.text();
+    bk = JSON.parse(text);
+  } catch(e) {
+    showStatus('❌ الملف تالف أو غير صالح', 'error');
+    input.value = '';
+    return;
+  }
+
+  // التحقق من البنية
+  const stores = ['users','products','families','customers','suppliers','sales','saleItems','debts','debtPayments','expenses','purchases','settings'];
+  const found  = stores.filter(s => Array.isArray(bk[s]));
+  if (!found.length) {
+    showStatus('❌ هذا الملف لا يحتوي على بيانات POS DZ صالحة', 'error');
+    input.value = '';
+    return;
+  }
+
+  // تحذير وتأكيد
+  const confirmed = await customConfirmAsync(
+    `⚠️ تحذير: استعادة النسخة الاحتياطية ستحذف جميع البيانات الحالية وتستبدلها.\n\n` +
+    `📅 تاريخ النسخة: ${bk.timestamp ? new Date(bk.timestamp).toLocaleString('ar-DZ') : 'غير معروف'}\n` +
+    `الجداول المحتواة: ${found.join(', ')}\n\n` +
+    `هل تريد المتابعة؟`
+  );
+  if (!confirmed) { showStatus('تم الإلغاء', 'warn'); input.value = ''; return; }
+
+  showStatus('⏳ جاري استعادة البيانات...');
+
+  let totalRestored = 0;
+  try {
+    for (const store of found) {
+      const records = bk[store];
+      if (!records?.length) continue;
+      // مسح الجدول ثم إعادة الإدخال
+      const allOld = await dbGetAll(store);
+      for (const rec of allOld) await dbDelete(store, rec.id ?? rec.key);
+      for (const rec of records) {
+        try { await dbPut(store, rec); totalRestored++; } catch(e) { /* تجاهل التعارضات */ }
+      }
+    }
+    showStatus(
+      `✅ تمت الاستعادة بنجاح!<br>` +
+      `<span style="font-size:0.85rem;">تمّ استعادة ${totalRestored} سجل من ${found.length} جدول</span><br>` +
+      `<span style="font-size:0.82rem;color:var(--text-secondary);">أعد تحميل الصفحة لرؤية البيانات المستعادة</span><br>` +
+      `<button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="location.reload()">🔄 إعادة تحميل الآن</button>`,
+      'success'
+    );
+    toast('✅ تمت استعادة البيانات بنجاح', 'success', 5000);
+  } catch(e) {
+    showStatus(`❌ خطأ أثناء الاستعادة: ${e.message}`, 'error');
+  }
+  input.value = '';
+}
+
+// ══════════════════════════════════════════════════════════════
 //  Print
 // ══════════════════════════════════════════════════════════════
-async function printInvoice(sale,items) {
-  const g=k=>getSetting(k);
-  const [sName,sPhone,sAddr,sWelcome,cur,sLogo,pSize,pLogo,pName,pPhone,pAddr,pWelcome,pBarcode]=
+async function printInvoice(sale, items) {
+  const g = k => getSetting(k);
+  const [sName,sPhone,sAddr,sWelcome,cur,sLogo,pSize,
+         pLogo,pName,pPhone,pAddr,pWelcome,pBarcode] =
     await Promise.all(['storeName','storePhone','storeAddress','storeWelcome','currency',
       'storeLogo','paperSize','printLogo','printName','printPhone','printAddress',
       'printWelcome','printBarcode'].map(g));
 
-  // ── عرض الورق الحرارية ──
-  const PW = pSize==='58mm' ? '56mm' : '76mm'; // 58mm→56mm | 80mm→76mm
+  const sess      = getSession();
+  const printedBy = sess ? sess.username : '';
+  const is58      = (pSize === '58mm');
 
-  // ── التاريخ والساعة يدوياً (متوافق مع كل الأنظمة) ──
-  const D  = new Date(sale.date || Date.now());
-  const p2 = n => ('0'+n).slice(-2);
-  const dateStr = D.getFullYear()+'/'+p2(D.getMonth()+1)+'/'+p2(D.getDate());
-  const timeStr = p2(D.getHours())+':'+p2(D.getMinutes());
+  // التاريخ والساعة
+  const D       = new Date(sale.date || Date.now());
+  const p2      = n => ('0' + n).slice(-2);
+  const dateStr = D.getFullYear() + '/' + p2(D.getMonth()+1) + '/' + p2(D.getDate());
+  const timeStr = p2(D.getHours()) + ':' + p2(D.getMinutes());
 
-  // ── عنوان الفاتورة ──
+  // رقم الفاتورة — نزيل # إذا كانت مخزنة مسبقاً
+  const invNum = String(sale.invoiceNumber || '').replace(/^#+/, '');
   const lbl = sale.debtSettlement && sale.partialSettlement
-    ? 'فاتورة تسديد جزئي #'+sale.invoiceNumber
-    : sale.debtSettlement  ? 'فاتورة تسديد #'+sale.invoiceNumber
-    : sale.isDebt          ? 'فاتورة دين #'+sale.invoiceNumber
-    : 'فاتورة #'+sale.invoiceNumber;
+    ? 'تسديد جزئي #' + invNum
+    : sale.debtSettlement ? 'تسديد #' + invNum
+    : sale.isDebt         ? 'فاتورة دين #' + invNum
+    : 'فاتورة #' + invNum;
 
-  // ── CSS مُحكم للطباعة الحرارية ──
+  // العملة
+  const C = (cur && cur.trim()) ? cur.trim() : 'DA';
+
+  // ═══════════════════════════════════════════════════════
+  // أبعاد الورق
+  // pageW = حجم @page
+  // هامش @page = 5mm كل جانب (لتجنب البتر)
+  // bodyW = pageW − (5mm × 2) = منطقة الكتابة الآمنة
+  // ═══════════════════════════════════════════════════════
+  const pageW = is58 ? '58mm' : '80mm';
+  const marg  = is58 ? '2mm'  : '2mm';   // هامش آمن كل جانب
+  // أعمدة الجدول بنسب % (لا mm) لتتكيف مع أي عرض
+  // مجموعها 100%: cn=34, cq=9, cp=24, ct=33
+
   const css = `
-@page { margin:2mm; size:${PW==='56mm'?'58mm':'80mm'} auto; }
+@page { size:${pageW} auto; margin:${marg}; }
 * { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: Arial, Tahoma, sans-serif;
-  font-size: 11pt;
+html, body {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10.5pt;
+  font-weight: 800;
   color: #000;
-  width: ${PW};
-  max-width: ${PW};
+  background: #fff;
+  width: 100%;
+  direction: rtl;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
-.center  { text-align:center; }
-.bold    { font-weight:900; }
-.xlarge  { font-size:14pt; font-weight:900; }
-.line-d  { border-top:2px solid #000; margin:3px 0; }
-.line-s  { border-top:1px dashed #000; margin:2px 0; }
-.flex-row {
+/* صف بعمودين */
+.row2 {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   width: 100%;
+  margin: 2.5px 0;
+  font-size: 10.5pt;
+  font-weight: 800;
 }
-/* جدول المنتجات — TABLE أكثر موثوقية من flex في الطباعة */
+.row2 .r { text-align: right; white-space: nowrap; }
+.row2 .l { text-align: left;  direction: ltr; white-space: nowrap; }
+/* الرأس */
+.hdr { font-size: 10.5pt; font-weight: 900; }
+/* الإجمالي */
+.total { font-size: 13pt; font-weight: 900; margin: 3px 0; }
+/* المدفوع */
+.paid  { font-size: 11pt; font-weight: 800; }
+/* وسط */
+.ctr { text-align: center; display: block; }
+/* اسم المتجر */
+.store { font-size: 14pt; font-weight: 900; letter-spacing: 0.5px; margin: 4px 0; }
+/* رسالة الترحيب */
+.welcome { font-size: 11.5pt; font-weight: 900; margin: 5px 0 3px; }
+/* باركود */
+.barcode { font-size: 9pt; font-weight: 700; letter-spacing: 4px; margin: 3px 0; }
+/* فواصل */
+.line-d { border-top: 2px solid #000; margin: 4px 0; }
+.line-s { border-top: 1px dashed #000; margin: 4px 0; }
+/* جدول المنتجات */
 table.items {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 10pt;
+  font-weight: 800;
+  margin: 3px 0;
 }
-table.items th {
-  font-weight: 900;
-  border-bottom: 1px solid #000;
-  padding: 1px 1px 2px;
-  text-align: right;
-  font-size: 10pt;
-}
-table.items td {
-  padding: 2px 1px;
-  font-weight: 700;
-  vertical-align: middle;
-  font-size: 10pt;
-  word-break: break-word;
-}
-/* أعمدة ثابتة العرض */
-.col-n  { width:auto; text-align:right; }
-.col-q  { width:16pt; text-align:center; }
-.col-p  { width:44pt; text-align:right; }
-.col-t  { width:44pt; text-align:right; }
-@media print { * { color:#000 !important; } }
+table.items thead tr { border-bottom: 2px solid #000; }
+table.items th { font-weight: 900; padding: 3px 1px; text-align: right; font-size: 9.5pt; }
+table.items td { padding: 3px 1px; font-weight: 800; vertical-align: middle; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+table.items tbody tr + tr { border-top: 1px dashed #999; }
+.cn { width: 34%; text-align: right; }
+.cq { width:  9%; text-align: center; }
+.cp { width: 24%; text-align: right; }
+.ct { width: 33%; text-align: right; font-weight: 900; }
+@media print { * { color:#000 !important; background:transparent !important; } }
 `;
 
-  let H = '<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">';
-  H += '<style>'+css+'</style></head><body>';
+  let H = '<!DOCTYPE html><html dir="rtl" lang="ar"><head>'
+        + '<meta charset="UTF-8">'
+        + '<style>' + css + '</style>'
+        + '</head><body>';
 
-  // ── رأس: رقم الفاتورة + التاريخ + الساعة ──
-  H += '<div class="flex-row bold">';
-  H += '<span>'+lbl+'</span>';
-  H += '<span>'+dateStr+' '+timeStr+'</span>';
-  H += '</div>';
+  // ── الرأس: رقم الفاتورة في سطر — التاريخ + الساعة في سطر منفصل ──
+  H += '<div class="hdr" style="text-align:right;font-weight:900;margin:2px 0;">' + lbl + '</div>'
+     + '<div class="hdr" style="text-align:left;direction:ltr;font-weight:800;margin:2px 0;">' + dateStr + '  ' + timeStr + '</div>';
+
+  // البائع
+  if (printedBy)
+    H += '<div class="row2 hdr">'
+       + '<span class="r">البائع:</span>'
+       + '<span class="l">' + printedBy + '</span>'
+       + '</div>';
+
   H += '<div class="line-d"></div>';
 
   // ── بيانات المتجر ──
   if (pLogo==='1' && sLogo)
-    H += '<div class="center"><img src="'+sLogo+'" style="max-width:55px;max-height:55px;display:block;margin:0 auto 2px;"/></div>';
+    H += '<div class="ctr"><img src="'+sLogo+'" style="max-width:55px;max-height:55px;margin:3px auto;display:block;"/></div>';
   if (pName==='1' && sName)
-    H += '<div class="center xlarge">'+sName+'</div>';
+    H += '<div class="ctr store">'+sName+'</div>';
   if (pPhone==='1' && sPhone)
-    H += '<div class="center bold">'+sPhone+'</div>';
+    H += '<div class="ctr" style="font-size:9.5pt;font-weight:800;margin:2px 0;">'+sPhone+'</div>';
   if (pAddr==='1' && sAddr)
-    H += '<div class="center bold">'+sAddr+'</div>';
+    H += '<div class="ctr" style="font-size:9pt;font-weight:700;margin:2px 0;">'+sAddr+'</div>';
+  if ((pLogo==='1'&&sLogo)||(pName==='1'&&sName)||(pPhone==='1'&&sPhone)||(pAddr==='1'&&sAddr))
+    H += '<div class="line-d"></div>';
 
   // ── بيانات الزبون ──
   if (sale.customerName) {
-    H += '<div class="line-s"></div>';
-    H += '<div class="flex-row"><span class="bold">الزبون:</span><span class="bold">'+sale.customerName+'</span></div>';
+    H += '<div class="row2 hdr"><span class="r">الزبون:</span><span class="l">'+sale.customerName+'</span></div>';
     if (sale.customerPhone)
-      H += '<div class="flex-row"><span class="bold">الهاتف:</span><span class="bold">'+sale.customerPhone+'</span></div>';
+      H += '<div class="row2 hdr"><span class="r">الهاتف:</span><span class="l">'+sale.customerPhone+'</span></div>';
+    H += '<div class="line-d"></div>';
   }
-  H += '<div class="line-d"></div>';
 
   // ── جدول المنتجات ──
-  H += '<table class="items">';
-  H += '<thead><tr>';
-  H += '<th class="col-n">المنتج</th>';
-  H += '<th class="col-q">ك</th>';
-  H += '<th class="col-p">السعر</th>';
-  H += '<th class="col-t">المجموع</th>';
-  H += '</tr></thead><tbody>';
+  // إصلاح 3: إذا كانت فاتورة تسديد وitems فارغة نعرض صف المبلغ المدفوع تلقائياً
+  const displayItems = (items && items.length > 0)
+    ? items
+    : (sale.debtSettlement
+        ? [{ productName: sale.partialSettlement ? 'تسديد جزئي' : 'تسديد دين', quantity: 1, unitPrice: parseFloat(sale.paid||sale.total||0), total: parseFloat(sale.paid||sale.total||0) }]
+        : []);
 
-  items.forEach(function(i) {
-    const nm  = (i.productName||'').length > 16
-                ? (i.productName||'').slice(0,15)+'…'
-                : (i.productName||'—');
-    const up  = parseFloat(i.unitPrice  || 0).toFixed(2);
-    const tot = parseFloat(i.total      || 0).toFixed(2);
-    const qty = parseFloat(i.quantity   || 1);
-    H += '<tr>';
-    H += '<td class="col-n">'+nm+'</td>';
-    H += '<td class="col-q">'+qty+'</td>';
-    H += '<td class="col-p">'+up+'</td>';
-    H += '<td class="col-t">'+tot+'</td>';
-    H += '</tr>';
+  H += '<table class="items"><thead><tr>'
+     + '<th class="cn">المنتج</th>'
+     + '<th class="cq">ك</th>'
+     + '<th class="cp">السعر</th>'
+     + '<th class="ct">المجموع</th>'
+     + '</tr></thead><tbody>';
+
+  displayItems.forEach(function(item) {
+    // إصلاح 2: زيادة maxL لعرض الاسم كاملاً — الاقتطاع فقط عند الضرورة القصوى
+    const maxL = is58 ? 12 : 16;
+    const nm   = (item.productName||'—').length > maxL
+                 ? (item.productName||'—').slice(0, maxL-1) + '\u2026'
+                 : (item.productName||'—');
+    H += '<tr>'
+       + '<td class="cn">'+nm+'</td>'
+       + '<td class="cq">'+parseFloat(item.quantity||1)+'</td>'
+       + '<td class="cp">'+parseFloat(item.unitPrice||0).toFixed(2)+'</td>'
+       + '<td class="ct">'+parseFloat(item.total||0).toFixed(2)+' '+C+'</td>'
+       + '</tr>';
   });
-
   H += '</tbody></table>';
   H += '<div class="line-d"></div>';
 
   // ── الإجماليات ──
-  const C = cur || 'دج';
   if (parseFloat(sale.discount||0) > 0)
-    H += '<div class="flex-row bold"><span>خصم:</span><span>- '+parseFloat(sale.discount).toFixed(2)+' '+C+'</span></div>';
+    H += '<div class="row2 paid">'
+       + '<span class="r">الخصم:</span>'
+       + '<span class="l">- '+parseFloat(sale.discount).toFixed(2)+' '+C+'</span>'
+       + '</div>';
 
-  H += '<div class="flex-row xlarge"><span>الإجمالي:</span><span>'+parseFloat(sale.total||0).toFixed(2)+' '+C+'</span></div>';
+  H += '<div class="row2 total">'
+     + '<span class="r"><b>الإجمالي:</b></span>'
+     + '<span class="l">'+C+' '+parseFloat(sale.total||0).toFixed(2)+'</span>'
+     + '</div>';
 
   if (parseFloat(sale.paid||0) > 0) {
-    H += '<div class="flex-row bold"><span>المدفوع:</span><span>'+parseFloat(sale.paid).toFixed(2)+' '+C+'</span></div>';
+    H += '<div class="row2 paid">'
+       + '<span class="r">المدفوع:</span>'
+       + '<span class="l">'+C+' '+parseFloat(sale.paid).toFixed(2)+'</span>'
+       + '</div>';
+    if (parseFloat(sale.change||0) > 0)
+      H += '<div class="row2 paid">'
+         + '<span class="r"><b>الباقي:</b></span>'
+         + '<span class="l">'+C+' '+parseFloat(sale.change).toFixed(2)+'</span>'
+         + '</div>';
     if (sale.isDebt) {
-      const debt = parseFloat(sale.total||0) - parseFloat(sale.paid||0);
-      H += '<div class="flex-row bold"><span>الدين:</span><span>'+debt.toFixed(2)+' '+C+'</span></div>';
+      const rem = parseFloat(sale.total||0) - parseFloat(sale.paid||0);
+      if (rem > 0)
+        H += '<div class="row2 paid">'
+           + '<span class="r"><b>الدين:</b></span>'
+           + '<span class="l">'+C+' '+rem.toFixed(2)+'</span>'
+           + '</div>';
     }
   }
-  if (sale.remainingDebt !== undefined)
-    H += '<div class="flex-row bold"><span>المتبقي:</span><span>'+parseFloat(sale.remainingDebt).toFixed(2)+' '+C+'</span></div>';
+  if (sale.remainingDebt !== undefined && parseFloat(sale.remainingDebt) > 0)
+    H += '<div class="row2 paid">'
+       + '<span class="r"><b>المتبقي:</b></span>'
+       + '<span class="l">'+C+' '+parseFloat(sale.remainingDebt).toFixed(2)+'</span>'
+       + '</div>';
 
   H += '<div class="line-d"></div>';
 
+  // ── رسالة الترحيب ──
   if (pWelcome==='1' && sWelcome)
-    H += '<div class="center bold" style="font-size:12pt;margin:4px 0;">'+sWelcome+'</div>';
-  if (pBarcode==='1' && sale.invoiceNumber)
-    H += '<div class="center" style="font-family:monospace;font-size:10pt;letter-spacing:3px;margin-top:3px;">||||| '+sale.invoiceNumber+' |||||</div>';
+    H += '<div class="ctr welcome">'+sWelcome+'</div>';
 
-  H += '<div class="center" style="font-size:7pt;color:#999;margin-top:4px;">'+APP_VERSION.name+' v'+APP_VERSION.number+'</div>';
+  // ── باركود نصي ──
+  if (pBarcode==='1' && sale.invoiceNumber)
+    H += '<div class="ctr barcode">||||| #'+invNum+' |||||</div>';
+
+  H += '<div class="line-s"></div>';
+
+  // هامش سفلي لقطع الورق
+  H += '<br/><br/>';
   H += '</body></html>';
 
-  _silentPrint(H);
+  _thermalPrint(H);
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// طباعة حرارية موثوقة — نافذة حقيقية أكثر موثوقية من iframe
+// ══════════════════════════════════════════════════════════════
+function _thermalPrint(html) {
+  const w = window.open('', '_blank', 'width=420,height=600,scrollbars=no,toolbar=no,menubar=no,location=no,status=no');
+  if (!w) { _silentPrint(html); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  w.onload = function() {
+    setTimeout(function() {
+      try {
+        w.focus();
+        w.print();
+        w.onafterprint = function() { try { w.close(); } catch(e) {} };
+        setTimeout(function() { try { if(!w.closed) w.close(); } catch(e) {} }, 9000);
+      } catch(e) { try { w.print(); } catch(e2) {} }
+    }, 350);
+  };
+  // fallback إذا لم يُطلق onload
+  setTimeout(function() {
+    if (w && !w.closed) { try { w.focus(); w.print(); } catch(e) {} }
+  }, 1800);
+}
 
 function _silentPrint(html) {
   document.getElementById('_posdzPrintFrame')?.remove();
@@ -411,17 +632,30 @@ function _silentPrint(html) {
 
 async function printBarcodeLabel(product) {
   const bv=product.barcode||String(product.id);
-  const[sName,cur,bcFont,bcType,showStore,showName,showPrice]=await Promise.all(['storeName','currency','barcodeFont','barcodeType','barcodeShowStore','barcodeShowName','barcodeShowPrice'].map(k=>getSetting(k)));
+  const[sName,cur,bcFont,bcType,showStore,showName,showPrice,rawSize,rawFs]=await Promise.all(
+    ['storeName','currency','barcodeFont','barcodeType','barcodeShowStore','barcodeShowName','barcodeShowPrice','barcodeLabelSize','barcodeFontSize'].map(k=>getSetting(k))
+  );
+  // أبعاد الملصق الحقيقية
+  const sizeMap={'58x38':'58mm 38mm','58x30':'58mm 30mm','58x20':'58mm 20mm','40x30':'40mm 30mm','40x25':'40mm 25mm','38x25':'38mm 25mm','30x20':'30mm 20mm'};
+  const labelSize=sizeMap[rawSize||'58x38']||'58mm 38mm';
+  const [pageW,pageH]=labelSize.split(' ');
+  const bodyW=parseInt(pageW)-4;
+  const baseFontSize=Math.max(6,Math.min(24,parseInt(rawFs)||12));
+  const storeFontSize=Math.max(6,baseFontSize-3);
+  const barcodeFontSize=Math.max(5,baseFontSize-4);
+  const priceFontSize=Math.max(8,baseFontSize+3);
+  const barsH=Math.max(18,parseInt(pageH)-20);
   function buildBars(code){
-    const s=String(code),N=2,W=5,H=45;
-    let b='<div style="width:2px;height:'+H+'px;background:#000"></div><div style="width:2px;height:'+H+'px;background:#fff"></div><div style="width:2px;height:'+H+'px;background:#000"></div><div style="width:2px;height:'+H+'px;background:#fff"></div>';
+    const s=String(code),N=2,W=4,H=barsH;
+    let b='<div style="width:2px;height:'+H+'px;background:#000"></div><div style="width:2px;height:'+H+'px;background:#fff"></div>';
     for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);for(let j=0;j<5;j++){const bl=j%2===0,bit=(c>>(4-j))&1,w=bit?W:N;b+=`<div style="width:${w}px;height:${H}px;background:${bl?'#000':'#fff'}"></div>`;}b+='<div style="width:2px;height:'+H+'px;background:#fff"></div>';}
-    b+='<div style="width:2px;height:'+H+'px;background:#000"></div><div style="width:2px;height:'+H+'px;background:#fff"></div><div style="width:3px;height:'+H+'px;background:#000"></div>';
-    return`<div style="display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-width:56mm">${b}</div>`;
+    b+='<div style="width:2px;height:'+H+'px;background:#000"></div>';
+    return`<div style="display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-width:${bodyW}mm;">${b}</div>`;
   }
-  const bars=bcType==='QR'?`<div style="font-size:9px;font-family:monospace;border:2px solid #000;padding:3px">[QR:${bv}]</div>`:buildBars(bv);
-  _silentPrint(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{margin:1mm;size:58mm 38mm;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'${bcFont||'Cairo'}',Arial,sans-serif;background:#fff;color:#000;width:56mm;text-align:center;padding:2px 1px;-webkit-print-color-adjust:exact;}.s{font-size:9px;font-weight:800;}.n{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:54mm;}.bc{font-family:'Courier New',monospace;font-size:8px;letter-spacing:3px;font-weight:900;}.pr{font-size:15px;font-weight:900;margin-top:1px;}@media print{*{color:#000!important;}}</style></head><body>${showStore==='1'&&sName?`<div class="s">${sName}</div>`:''}${showName!=='0'?`<div class="n">${product.name}</div>`:''}${bars}<div class="bc">${bv}</div>${showPrice!=='0'?`<div class="pr">${parseFloat(product.sellPrice||0).toFixed(2)} ${cur||'دج'}</div>`:''}</body></html>`);
+  const bars=bcType==='QR'?`<div style="font-size:${barcodeFontSize}px;font-family:monospace;border:2px solid #000;padding:2px;display:inline-block;">[QR:${bv}]</div>`:buildBars(bv);
+  _silentPrint(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{margin:1mm;size:${labelSize};}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'${bcFont||'Cairo'}',Arial,sans-serif;background:#fff;color:#000;width:${bodyW}mm;text-align:center;padding:1px 1mm;-webkit-print-color-adjust:exact;print-color-adjust:exact;}.sn{font-size:${storeFontSize}px;font-weight:800;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:${bodyW}mm;}.pn{font-size:${baseFontSize}px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:${bodyW}mm;}.bc{font-family:'Courier New',monospace;font-size:${barcodeFontSize}px;letter-spacing:1px;font-weight:800;}.pr{font-size:${priceFontSize}px;font-weight:900;margin-top:1px;}@media print{*{color:#000!important;}}</style></head><body>${showStore==='1'&&sName?`<div class="sn">${sName}</div>`:''}${showName!=='0'?`<div class="pn">${product.name}${product.size?' — '+product.size:''}</div>`:''}${bars}<div class="bc">${bv}</div>${showPrice!=='0'?`<div class="pr">${parseFloat(product.sellPrice||0).toFixed(2)} ${cur||'DA'}</div>`:''}</body></html>`);
 }
+
 
 // ══════════════════════════════════════════════════════════════
 //  Sound
@@ -612,7 +846,7 @@ const APP_I18N = {
     saleProduct:'المنتج', saleQty:'الكمية', salePrice:'السعر', saleTotal:'المجموع',
     saleDiscount:'خصم:', saleCustomer:'الزبون:', salePaid:'المبلغ المدفوع:',
     saleBtnCheckout:'تسديد', saleBtnPartial:'جزئي + دين', saleBtnDebt:'دين كامل',
-    saleEmpty:'السلة فارغة', saleTotalLabel:'الإجمالي',
+    saleEmpty:'السلة فارغة', saleTotalLabel:'الإجمالي', saleItemsUnit:'صنف',
     saleModalTitle:'تأكيد البيع', saleBtnPrint:'طباعة الفاتورة',
     saleSelectCustomer:'— اختر الزبون —',
     // الميزان
@@ -713,7 +947,7 @@ const APP_I18N = {
     saleProduct:'Produit', saleQty:'Qté', salePrice:'Prix', saleTotal:'Total',
     saleDiscount:'Remise:', saleCustomer:'Client:', salePaid:'Montant payé:',
     saleBtnCheckout:'Payer', saleBtnPartial:'Partiel + Crédit', saleBtnDebt:'Crédit total',
-    saleEmpty:'Panier vide', saleTotalLabel:'Total',
+    saleEmpty:'Panier vide', saleTotalLabel:'Total', saleItemsUnit:'article(s)',
     saleModalTitle:'Confirmer la vente', saleBtnPrint:'Imprimer la facture',
     saleSelectCustomer:'— Choisir client —',
     scaleWeight:'Poids:', scalePrice:'Prix/kg:', scaleTotal:'Total:',
@@ -807,7 +1041,7 @@ const APP_I18N = {
     saleProduct:'Product', saleQty:'Qty', salePrice:'Price', saleTotal:'Total',
     saleDiscount:'Discount:', saleCustomer:'Customer:', salePaid:'Paid:',
     saleBtnCheckout:'Pay', saleBtnPartial:'Partial + Debt', saleBtnDebt:'Full Credit',
-    saleEmpty:'Cart is empty', saleTotalLabel:'Total',
+    saleEmpty:'Cart is empty', saleTotalLabel:'Total', saleItemsUnit:'item(s)',
     saleModalTitle:'Confirm Sale', saleBtnPrint:'Print Invoice',
     saleSelectCustomer:'— Select customer —',
     scaleWeight:'Weight:', scalePrice:'Price/kg:', scaleTotal:'Total:',
@@ -1194,15 +1428,46 @@ function notifPasswordChange(username) {
 // ══════════════════════════════════════════════════════════════
 //  Init الرئيسي
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  Auto Backup — يحفظ مرة يومياً عند تغيير التاريخ
+// ══════════════════════════════════════════════════════════════
+async function _scheduleAutoBackup() {
+  if (await getSetting('autoBackup') !== '1') return;
+  const lastKey = 'posdz_last_autobackup';
+  const lastDate = localStorage.getItem(lastKey) || '';
+  const today = todayStr();
+  if (lastDate !== today) {
+    // انتظر 5 ثوان لضمان تحميل كل شيء
+    setTimeout(async () => {
+      try {
+        if (await getSetting('autoBackup') !== '1') return;
+        const stores=['users','products','families','customers','suppliers','sales','saleItems','debts','debtPayments','expenses','purchases','settings'];
+        const bk={version:APP_VERSION.number,timestamp:new Date().toISOString(),auto:true};
+        for(const s of stores) bk[s]=await dbGetAll(s);
+        const json = JSON.stringify(bk);
+        // حفظ في localStorage (آخر نسخة فقط لتجنب امتلاء الذاكرة)
+        try { localStorage.setItem('posdz_autobackup_data', json); } catch(e) {}
+        localStorage.setItem(lastKey, today);
+        _pushNotif('autobackup_'+today,'💾','نسخة احتياطية تلقائية',`تم حفظ النسخة الاحتياطية ليوم ${today}`,'success');
+      } catch(e) {}
+    }, 5000);
+  }
+  // فحص كل ساعة
+  setTimeout(_scheduleAutoBackup, 60 * 60 * 1000);
+}
+
 async function initApp() {
+  _initSessionTimeout(); // تفعيل إشعار انتهاء الجلسة
   await openDB();
   await applyTheme();
   await loadCurrency();
   await loadHeaderStoreName();
   startClock();
   initSidebar();
+  _ensureSidebarClosed();
   initVirtualKeyboard();
   initButtonSounds();
   await SYNC.init();
   setTimeout(() => initNotifications(), 1500);
+  _scheduleAutoBackup();
 }
