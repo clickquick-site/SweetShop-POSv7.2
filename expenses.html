@@ -75,35 +75,6 @@
     <!-- ══════════════════════════════════════════════ -->
     <div class="tab-content active" id="tab-expenses">
 
-      <!-- فواتير ثابتة — تسجيل سريع -->
-      <div class="card" style="margin-bottom:16px;">
-        <h3 style="color:var(--primary-light);margin-bottom:14px;font-size:0.95rem;">⚡ فواتير ثابتة — تسجيل سريع</h3>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn" onclick="quickBill('كهرباء وغاز','⚡🔥')"
-            style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;font-weight:700;">
-            ⚡🔥 فاتورة الكهرباء والغاز
-          </button>
-          <button class="btn" onclick="quickBill('هاتف','📞')"
-            style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);color:#60a5fa;font-weight:700;">
-            📞 فاتورة الهاتف
-          </button>
-          <button class="btn" onclick="quickBill('أنترنت','🌐')"
-            style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:#34d399;font-weight:700;">
-            🌐 فاتورة الأنترنت
-          </button>
-        </div>
-        <!-- حقول الفاتورة السريعة -->
-        <div id="quickBillForm" style="display:none;margin-top:14px;padding:12px;background:var(--bg-dark);border-radius:8px;border:1px solid var(--border);">
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <span id="quickBillLabel" style="font-weight:700;font-size:0.92rem;min-width:120px;"></span>
-            <input class="input-field" type="number" id="quickBillAmt"  placeholder="المبلغ..."   min="0" step="0.01" style="width:130px;"/>
-            <input class="input-field" type="date"   id="quickBillDate" style="width:145px;"/>
-            <input class="input-field" type="text"   id="quickBillNote" placeholder="ملاحظة..."   style="flex:1;min-width:120px;"/>
-            <button class="btn btn-success" onclick="saveQuickBill()"><i class="fa-solid fa-check"></i> حفظ</button>
-            <button class="btn btn-ghost"   onclick="document.getElementById('quickBillForm').style.display='none'">✕</button>
-          </div>
-        </div>
-      </div>
 
       <!-- إحصائيات -->
       <div class="exp-stats" id="expStats">
@@ -360,9 +331,11 @@ async function init() {
   await initApp();
   currency = await getSetting('currency') || 'DA';
   document.getElementById('wCurLabel').textContent = currency;
+  // تهيئة تاريخ النموذج والفلتر باليوم الحالي
   document.getElementById('filterExpDate').value = todayIso();
+  document.getElementById('expDate').value        = todayIso();
   await loadExpenses();
-  await loadWorkers();
+  try { await loadWorkers(); } catch(e) { console.warn('workers store:', e); }
   await updateStats();
   // Enter shortcuts
   document.getElementById('expAmt')?.addEventListener('keydown', e => { if(e.key==='Enter') saveExpense(); });
@@ -383,33 +356,6 @@ function switchTab(name) {
    قسم المصاريف العامة
 ══════════════════════════════════════════════ */
 
-// ── فواتير ثابتة سريعة ───────────────────────
-let _quickBillCat = '';
-function quickBill(category, label) {
-  _quickBillCat = category;
-  const form = document.getElementById('quickBillForm');
-  document.getElementById('quickBillLabel').textContent = label + ' ' + category;
-  document.getElementById('quickBillAmt').value  = '';
-  document.getElementById('quickBillNote').value = '';
-  // تاريخ اليوم
-  const d = new Date(), p2 = n => ('0'+n).slice(-2);
-  document.getElementById('quickBillDate').value = `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
-  form.style.display = '';
-  setTimeout(() => document.getElementById('quickBillAmt')?.focus(), 100);
-}
-
-async function saveQuickBill() {
-  const amt  = parseFloat(document.getElementById('quickBillAmt').value);
-  const date = document.getElementById('quickBillDate').value;
-  const note = document.getElementById('quickBillNote').value.trim();
-  if (!amt || amt <= 0) { if(typeof toast==='function') toast('أدخل المبلغ', 'warning'); return; }
-  if (!date)            { if(typeof toast==='function') toast('اختر التاريخ', 'warning'); return; }
-  await dbAdd('expenses', { category: _quickBillCat, amount: amt, date, note, createdAt: new Date().toISOString() });
-  document.getElementById('quickBillForm').style.display = 'none';
-  if(typeof toast==='function') toast(`✅ تم تسجيل فاتورة ${_quickBillCat}`, 'success');
-  await loadExpenses();
-  await updateStats();
-}
 
 // ── تحليل الراتب — النقطة كفاصل ألفي جزائري ──────────────────
 // 30.000 → 30000 | 1.500.000 → 1500000 | 30000 → 30000 | 15.5 → 15.5
@@ -465,6 +411,8 @@ async function saveExpense() {
   else   { await dbAdd('expenses',data); toast('تم حفظ المصروف ✅','success'); }
 
   clearExpForm();
+  // مزامنة فلتر التاريخ مع تاريخ المصروف المحفوظ لضمان ظهوره فوراً
+  document.getElementById('filterExpDate').value = date;
   await loadExpenses();
   await updateStats();
 }
