@@ -1076,9 +1076,10 @@ function renderCart(){
     <div class="cart-item-row">
 
       <!-- العائلة / المنتج: في نفس السطر — بدون أرقام -->
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        ${item.familyName ? `<span style="font-size:0.78rem;font-weight:800;color:var(--primary-light);background:rgba(124,58,237,0.14);border:1px solid rgba(124,58,237,0.28);border-radius:5px;padding:1px 7px;white-space:nowrap;line-height:1.6;">${item.familyName}</span>` : ''}
         <span style="font-size:1rem;font-weight:900;color:var(--text-primary);line-height:1.2;white-space:nowrap;">${item.name}</span>
-        ${(item.size && isNaN(item.size)) ? `<span style="font-size:0.88rem;font-weight:700;color:var(--primary-light);white-space:nowrap;">${item.size}</span>` : ''}
+        ${(item.size && isNaN(item.size)) ? `<span style="font-size:0.88rem;font-weight:700;color:var(--text-secondary);white-space:nowrap;">${item.size}</span>` : ''}
       </div>
 
       <!-- الحجم/الوحدة -->
@@ -1145,6 +1146,7 @@ function addToCart(product){
     cart.push({
       productId:product.id,
       name: product.name,
+      familyName: product.family || '',
       size: product.size || '',
       quantity:addQty, unitPrice:product.sellPrice,
       total:addQty * product.sellPrice,
