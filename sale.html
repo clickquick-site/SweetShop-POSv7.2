@@ -613,6 +613,7 @@
 'use strict';
 let cart = JSON.parse(sessionStorage.getItem('posdz_cart')||'[]');
 let allProducts = [];
+let allFamilies = [];
 let currency = 'DA';
 function getCurrency() {
   // تقرأ دائماً من الـ i18n المحدَّث أو الإعداد المخزَّن
@@ -956,6 +957,15 @@ async function init(){
   await initApp();
   currency = await getSetting('currency')||'DA';
   allProducts = await dbGetAll('products');
+  allFamilies = await dbGetAll('families');
+  // إثراء عناصر السلة المحفوظة بـ familyName إن لم تكن موجودة
+  cart = cart.map(item => {
+    if (!item.familyName) {
+      const prod = allProducts.find(p => p.id === item.productId);
+      item.familyName = (prod && allFamilies.find(f => f.id === prod.familyId)?.name) || '';
+    }
+    return item;
+  });
   await loadCustomerSelect();
   renderCart(); updateTotal(); initSearch();
   await loadHeaderInvoiceNum();
@@ -1146,7 +1156,7 @@ function addToCart(product){
     cart.push({
       productId:product.id,
       name: product.name,
-      familyName: product.family || '',
+      familyName: (allFamilies.find(f => f.id === product.familyId)?.name) || '',
       size: product.size || '',
       quantity:addQty, unitPrice:product.sellPrice,
       total:addQty * product.sellPrice,
