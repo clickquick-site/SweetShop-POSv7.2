@@ -17,8 +17,8 @@
     .cart-area{flex:1;overflow-y:auto;overflow-x:auto;background:var(--bg-medium);border-radius:var(--radius);border:1px solid var(--border);position:relative;}
     .cart-area::before{content:'POS DZ';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:Impact,sans-serif;font-size:clamp(3.5rem,15vw,8rem);font-weight:900;color:rgba(124,58,237,0.055);letter-spacing:8px;pointer-events:none;user-select:none;z-index:0;}
     .cart-area>*{position:relative;z-index:1;}
-    .cart-header-row{display:grid;grid-template-columns:minmax(110px,1.8fr) 52px 58px 48px 110px 74px 82px 38px;gap:3px 2px;padding:7px 10px;background:var(--bg-dark);border-bottom:2px solid var(--primary);font-size:0.72rem;color:var(--text-secondary);font-weight:800;min-width:580px;position:sticky;top:0;z-index:2;}
-    .cart-item-row{display:grid;grid-template-columns:minmax(110px,1.8fr) 52px 58px 48px 110px 74px 82px 38px;gap:3px 2px;padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.04);align-items:center;transition:background 0.14s;min-width:580px;}
+    .cart-header-row{display:grid;grid-template-columns:minmax(140px,2fr) 110px 74px 82px 38px;gap:4px;padding:7px 10px;background:var(--bg-dark);border-bottom:2px solid var(--primary);font-size:0.72rem;color:var(--text-secondary);font-weight:800;min-width:580px;position:sticky;top:0;z-index:2;}
+    .cart-item-row{display:grid;grid-template-columns:minmax(140px,2fr) 110px 74px 82px 38px;gap:4px;padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.04);align-items:center;transition:background 0.14s;min-width:580px;}
     .cart-item-row:hover{background:rgba(124,58,237,0.07);}
     .cart-item-row:nth-child(even){background:rgba(255,255,255,0.016);}
     .cart-cell{display:flex;flex-direction:column;align-items:center;gap:1px;}
@@ -350,9 +350,6 @@
     <div class="cart-area" id="cartArea">
       <div class="cart-header-row">
         <span>المنتج</span>
-        <span style="text-align:center;">الحجم/الوحدة</span>
-        <span style="text-align:center;">سعر الشراء</span>
-        <span style="text-align:center;">المخزون</span>
         <span style="text-align:center;" data-i18n="saleQty">الكمية</span>
         <span style="text-align:center;">السعر</span>
         <span style="text-align:center;" data-i18n="saleTotal">المجموع</span>
@@ -1075,24 +1072,14 @@ function renderCart(){
     return `
     <div class="cart-item-row">
 
-      <!-- المنتج -->
-      <div class="cart-cell" style="align-items:flex-start;">
-        <span class="cart-cell-val" style="font-size:0.84rem;text-align:right;white-space:normal;line-height:1.25;">${item.name}</span>
-      </div>
-
-      <!-- الحجم/الوحدة -->
-      <div class="cart-cell">
-        <span class="cart-cell-val" style="color:var(--text-secondary);font-size:0.78rem;">${sizeVal}</span>
-      </div>
-
-      <!-- سعر الشراء -->
-      <div class="cart-cell">
-        <span class="cart-cell-val" style="color:${buyColor};font-size:0.82rem;">${buyVal}</span>
-      </div>
-
-      <!-- المخزون المتبقي -->
-      <div class="cart-cell">
-        <span class="cart-cell-val" style="color:${stockColor};font-size:0.88rem;">${stockVal}</span>
+      <!-- المنتج + الحجم + سعر الشراء + المخزون (داخل نفس الخلية) -->
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;">
+        <span style="font-size:0.88rem;font-weight:700;color:var(--text-primary);line-height:1.25;white-space:normal;">${item.name}</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          ${sizeVal !== '—' ? `<span style="font-size:0.68rem;font-weight:700;background:rgba(124,58,237,0.14);color:var(--primary-light);border:1px solid rgba(124,58,237,0.28);border-radius:4px;padding:1px 6px;">${sizeVal}</span>` : ''}
+          ${buyVal !== '—' ? `<span style="font-size:0.68rem;font-weight:700;color:${buyColor};">سعر الشراء: ${buyVal}</span>` : ''}
+          <span style="font-size:0.68rem;font-weight:700;color:${stockColor};">📦 ${stockVal}</span>
+        </div>
       </div>
 
       <!-- الكمية -->
@@ -1579,7 +1566,7 @@ function initSearch(){
       else
         stockBadge = `<span class="item-stock">📦 ${available}</span>`;
       const displayName = p.size ? `${p.name} — ${p.size}` : p.name;
-      const buyBadge = p.buyPrice ? `<span style="color:#60a5fa;font-size:0.74rem;font-weight:700;">ش: ${parseFloat(p.buyPrice).toFixed(2)}</span>` : '';
+      const buyBadge = p.buyPrice ? `<span style="color:#60a5fa;font-size:0.74rem;font-weight:700;">سعر الشراء: ${parseFloat(p.buyPrice).toFixed(2)}</span>` : '';
       return `
       <div class="autocomplete-item" onclick="selectProduct(${p.id})" style="${qty<=0?'opacity:0.55;':''}">
         <span style="font-weight:700;">${displayName}</span>
