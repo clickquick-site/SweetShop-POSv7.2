@@ -285,15 +285,7 @@
             <div style="margin-top:6px;font-size:0.68rem;"><span id="kpiMargin" style="color:#3b82f6;font-weight:700;">هامش: —</span></div>
           </div>
 
-          <!-- 4. المصاريف التشغيلية -->
-          <div style="background:var(--bg-card);border:1px solid var(--border);border-top:3px solid #f59e0b;border-radius:var(--radius);padding:12px 14px;">
-            <div style="font-size:0.68rem;color:#f59e0b;font-weight:700;margin-bottom:5px;">💸 المصاريف التشغيلية</div>
-            <div id="kpiExpenses" style="font-size:1.4rem;font-weight:900;color:#f59e0b;font-family:Impact,sans-serif;">—</div>
-            <div style="font-size:0.65rem;color:var(--text-secondary);margin-top:5px;line-height:1.4;">
-              إيجار، رواتب، كهرباء...<br>
-              <span style="color:rgba(255,255,255,0.3);">(ما تدفعه لتشغيل المتجر)</span>
-            </div>
-          </div>
+
 
           <!-- 5. الربح الصافي — البطاقة الأهم -->
           <div style="background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(124,58,237,0.08));border:2px solid rgba(124,58,237,0.5);border-top:3px solid #7c3aed;border-radius:var(--radius);padding:12px 14px;box-shadow:0 0 18px rgba(124,58,237,0.15);">
@@ -1028,7 +1020,6 @@ async function updateSidebarValues() {
   set('kpiCost',        fmt(costToday));
   set('kpiGrossProfit', fmt(grossProfitToday));
   set('kpiMargin',      `هامش: ${margin}%`);
-  set('kpiExpenses',    fmt(expTotal));
   set('kpiInvoices',    todaySales.length + (todaySettle.length ? '+'+todaySettle.length : ''));
   set('kpiDebts',       fmt(debtTotal));
   set('kpiLowStock',    lowStock.length > 0 ? lowStock.length + ' منتج' : '✅ جيد');
